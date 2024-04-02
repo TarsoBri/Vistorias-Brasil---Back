@@ -142,7 +142,7 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
 
       return res.status(200).json(clientWithNewPassword);
     } else {
-      return res.status(400).send("A senha está incorreta.");
+      return res.status(400).send("A sua senha está incorreta.");
     }
   } catch (error) {
     return res.status(400).send("Erro ao alterar senha do usuário.");
@@ -162,17 +162,33 @@ routes.delete("/clients/:id", async (req, res) => {
   }
 });
 
-// import nodemailer from "nodemailer";
+import nodemailer from "nodemailer";
 
-// routes.post("/email", async (req, res) => {
-//   try {
-//     const transporter = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
+routes.post("/email", async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "tarsobrietzkeiracet@gmail.com",
+        pass: process.env.PASSWORD_EMAIL,
+      },
+    });
 
-//       }
-//     });
-//   } catch (error) {}
-// });
+    const configEmail = {
+      from: "tarsobrietzkeiracet@gmail.com",
+      to: "tarso.iracet@hotmail.com",
+      subject: "Testandooo",
+      text: "Hello world!",
+    };
+
+    transporter.sendMail(configEmail, (err, data) => {
+      if (err) {
+        console.log("Erro no email!");
+      } else {
+        console.log("Sucesso no email!");
+      }
+    });
+  } catch (error) {}
+});
 
 export { routes };
