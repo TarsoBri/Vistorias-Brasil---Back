@@ -1,6 +1,7 @@
 import express from "express";
 import { Client } from "./models/Client";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt, { Secret } from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 
@@ -60,7 +61,7 @@ routes.post("/clients/login", async (req, res) => {
 });
 
 // Confirm Login token
-routes.post("/cliesnt/login/confirm", async (req, res) => {
+routes.post("/clients/login/confirm", async (req, res) => {
   try {
     const { token, key, userId } = req.body;
     const user = await Client.findOne({ _id: userId });
@@ -164,31 +165,64 @@ routes.delete("/clients/:id", async (req, res) => {
 
 import nodemailer from "nodemailer";
 
+interface ConfigEmail {
+  from: {
+    name: string;
+    address: string;
+  };
+  to: string;
+  subject: string;
+  html: string;
+}
+
 routes.post("/email", async (req, res) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "tarsobrietzkeiracet@gmail.com",
-        pass: process.env.PASSWORD_EMAIL,
-      },
-    });
+    const { email } = req.body;
+    const client = await Client.findOne({ email });
 
-    const configEmail = {
-      from: "tarsobrietzkeiracet@gmail.com",
-      to: "tarso.iracet@hotmail.com",
-      subject: "Testandooo",
-      text: "Hello world!",
-    };
+    if (client === null) {
+      throw new Error("Email não encontrado!");
+    }
 
-    transporter.sendMail(configEmail, (err, data) => {
-      if (err) {
-        console.log("Erro no email!");
-      } else {
-        console.log("Sucesso no email!");
-      }
-    });
-  } catch (error) {}
+    if (process.env.EMAIL && process.env.PASSWORD_EMAIL) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.PASSWORD_EMAIL,
+        },
+      });
+
+      const code = crypto.randomBytes(3).toString("hex");
+      console.log(code);
+
+      const configEmail: ConfigEmail = {
+        from: {
+          name: "Vistorias Brasil",
+          address: process.env.EMAIL,
+        },
+        to: "tarsobrietzkeiracet@gmail.com",
+        subject: "Redefinição de senha",
+        html: `<p> Você solicitou a redfinição de senha no Vistorais Brasil, utilize o código a seguir para redefinir sua senha: </p> 
+        <p> <strong>${code}</strong> </p>`,
+      };
+
+      // transporter.sendMail(configEmail, (err, data) => {
+      //   if (err) {
+      //     throw new Error("Falha ao enviar o email!");
+      //   } else {
+      //     res.status(200).send("Sucesso ao enviar o email!");
+      //   }
+      // });
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(400).send(error.message);
+    }
+  }
 });
 
 export { routes };
