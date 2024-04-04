@@ -1,19 +1,23 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import jwt, { Secret } from "jsonwebtoken";
 import { connectDataBase } from "./database/connect";
 import { routes } from "./router";
 
-const autheticateToken = (req, res, next) => {
-  const token = req.headers["authorization"];
-  console.log(token);
-  if (token && token == 123) {
-    req.body.auth = "autorizado chefe!";
-  } else {
-    res.status(400).send("Não autorizado!");
+const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
+  if ("token-auth" in req.headers) {
+    const token = req.headers["token-auth"];
+    try {
+      if (token && typeof token === "string") {
+        jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
+        next();
+      } else {
+        return res.send("Token não recebido!");
+      }
+    } catch (error) {
+      return res.status(400).send("Não autorizado!");
+    }
   }
-  next();
-  // jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
 };
 
 const app = express();
@@ -28,24 +32,18 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-import { Client } from "./models/Client";
 
-app.use(autheticateToken);
-// app.use("/", routes);
-// Get client
-app.get("/clients", async (req, res) => {
+app.get("/auth", async (req, res) => {
   try {
-    if (req.body.auth) {
-      const clients = await Client.find({});
-      return res.status(200).json(clients);
-    } else {
-      throw new Error("Não authh");
-    }
+    const tokenAuth = jwt.sign({}, process.env.TOKEN_PASSWORD as Secret);
+    return res.status(200).json({ tokenAuth });
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
     }
   }
 });
+
+app.use("/", autheticateToken, routes);
 
 app.listen(8080, () => console.log("Init APP"));

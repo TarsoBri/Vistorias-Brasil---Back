@@ -21,7 +21,7 @@ routes.post("/clients", async (req, res) => {
       const client = await Client.create(clientData);
       return res.status(201).json(client);
     } else {
-      return res.status(500).send("Email já utilizado");
+      throw new Error("Email já utilizado");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -32,15 +32,15 @@ routes.post("/clients", async (req, res) => {
 
 // Login
 routes.post("/clients/login", async (req, res) => {
-  const user = await Client.findOne({
-    email: req.body.email,
-  });
-
-  if (user === null) {
-    return res.status(500).send("Email não encontrado");
-  }
-
   try {
+    const user = await Client.findOne({
+      email: req.body.email,
+    });
+
+    if (user === null) {
+      throw new Error("Email não encontrado");
+    }
+
     const approvedPassword = await bcrypt.compare(
       req.body.password,
       user.password
@@ -53,31 +53,8 @@ routes.post("/clients/login", async (req, res) => {
 
       return res.status(200).json({ token });
     } else {
-      return res.status(500).send("Senha incorreta");
+      throw new Error("Senha incorreta");
     }
-  } catch (error) {
-    return res.status(400).send("Erro ao logar usuário");
-  }
-});
-
-// Confirm Login token
-routes.post("/clients/login/confirm", async (req, res) => {
-  try {
-    const { token, key, userId } = req.body;
-    const user = await Client.findOne({ _id: userId });
-    jwt.verify(token, key);
-
-    return res.status(201).json(user);
-  } catch (error) {
-    return res.status(401).send("Usuário não autorizado");
-  }
-});
-
-// Get client
-routes.get("/clients", async (req, res) => {
-  try {
-    const clients = await Client.find({});
-    return res.status(200).json(clients);
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
@@ -85,7 +62,47 @@ routes.get("/clients", async (req, res) => {
   }
 });
 
-// Get client
+// Confirm Login token
+routes.post("/clients/login/confirm", async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (token != "") {
+      jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
+
+      const tokenDecoded = jwt.decode(token);
+
+      if (tokenDecoded && typeof tokenDecoded === "object") {
+        const user = await Client.findOne({
+          _id: tokenDecoded!.userId,
+        });
+
+        return res.status(201).json(user);
+      } else {
+        throw new Error("Token inválido");
+      }
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(400).send(error.message);
+    }
+  }
+});
+
+// Get clients
+routes.get("/clients", async (req, res) => {
+  try {
+    const clients = await Client.find({});
+    const token = jwt.sign({ clients }, process.env.TOKEN_PASSWORD as Secret);
+    console.log (token)
+    return res.status(200).json(token);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(400).send(error.message);
+    }
+  }
+});
+
+// Get client by id
 routes.get("/clients/:id", async (req, res) => {
   try {
     const id: string = req.params.id;
@@ -123,45 +140,46 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
     const id: string = req.params.id;
     const client = await Client.find({ _id: id });
 
-    const approvedPassword = await bcrypt.compare(
-      req.body.password,
-      client[0].password
-    );
-    if (approvedPassword) {
-      const hashedNewPassword: string = await bcrypt.hash(
-        req.body.newPassword,
-        10
-      );
+    const approvedPassword = await bcrypt
+      .compare(req.body.password, client[0].password)
+      .then(async () => {
+        const hashedNewPassword: string = await bcrypt.hash(
+          req.body.newPassword,
+          10
+        );
 
-      const clientWithNewPassword = await Client.updateOne(
-        { _id: id },
-        {
-          password: hashedNewPassword,
-          update_at: req.body.update_at,
-        }
-      );
+        const clientWithNewPassword = Client.updateOne(
+          { _id: id },
+          {
+            password: hashedNewPassword,
+            update_at: req.body.update_at,
+          }
+        );
 
-      return res.status(200).json(clientWithNewPassword);
-    } else {
-      return res.status(400).send("A sua senha está incorreta.");
-    }
-  } catch (error) {
-    return res.status(400).send("Erro ao alterar senha do usuário.");
-  }
-});
-
-// Delete client
-routes.delete("/clients/:id", async (req, res) => {
-  try {
-    const id: string = req.params.id;
-    const client = await Client.findByIdAndDelete({ _id: id });
-    return res.status(200).json(client);
+        return res.status(200).json(clientWithNewPassword);
+      })
+      .catch(() => {
+        throw new Error("A sua senha está incorreta.");
+      });
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
     }
   }
 });
+
+// Delete client
+// routes.delete("/clients/:id", async (req, res) => {
+//   try {
+//     const id: string = req.params.id;
+//     const client = await Client.findByIdAndDelete({ _id: id });
+//     return res.status(200).json(client);
+//   } catch (error: unknown) {
+//     if (error instanceof Error) {
+//       return res.status(400).send(error.message);
+//     }
+//   }
+// });
 
 import nodemailer from "nodemailer";
 
