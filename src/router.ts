@@ -92,9 +92,7 @@ routes.post("/clients/login/confirm", async (req, res) => {
 routes.get("/clients", async (req, res) => {
   try {
     const clients = await Client.find({});
-    const token = jwt.sign({ clients }, process.env.TOKEN_PASSWORD as Secret);
-    console.log (token)
-    return res.status(200).json(token);
+    return res.status(200).json(clients);
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);

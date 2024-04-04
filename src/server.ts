@@ -1,9 +1,18 @@
+const path = require("path");
+import https from "https";
+import fs from "fs";
+const keyPath = path.resolve(__dirname, "./SSL/code.key");
+const certPath = path.resolve(__dirname, "./SSL/code.crt");
+
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import jwt, { Secret } from "jsonwebtoken";
 import { connectDataBase } from "./database/connect";
 import { routes } from "./router";
 
+const port = process.env.PORT || 3001;
+
+// Middlewares
 const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
   if ("token-auth" in req.headers) {
     const token = req.headers["token-auth"];
@@ -22,10 +31,20 @@ const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
 
 const app = express();
 
+// Use Json in express
 app.use(express.json());
 
+// Connect DataBase
 connectDataBase();
 
+// Server HTTPS
+const httpsOptions = {
+  key: fs.readFileSync(keyPath),
+  cert: fs.readFileSync(certPath),
+};
+const server = https.createServer(httpsOptions, app);
+
+// Cors
 const corsOptions = {
   origin: "http://localhost:5173",
   optionsSuccessStatus: 200,
@@ -33,6 +52,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Routers
 app.get("/auth", async (req, res) => {
   try {
     const tokenAuth = jwt.sign({}, process.env.TOKEN_PASSWORD as Secret);
@@ -46,4 +66,4 @@ app.get("/auth", async (req, res) => {
 
 app.use("/", autheticateToken, routes);
 
-app.listen(8080, () => console.log("Init APP"));
+server.listen(443, () => console.log("Init APP"));
