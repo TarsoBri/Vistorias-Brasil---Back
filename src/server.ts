@@ -53,4 +53,4 @@ app.get("/auth", async (req, res) => {
 
 app.use("/", autheticateToken, routes);
 
-app.listen(port, () => console.log("Init APP"));
+app.listen(port, () => console.log("Init APP on Port:", port));
