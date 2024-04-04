@@ -1,9 +1,3 @@
-const path = require("path");
-import https from "https";
-import fs from "fs";
-const keyPath = path.resolve(__dirname, "./SSL/code.key");
-const certPath = path.resolve(__dirname, "./SSL/code.crt");
-
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import jwt, { Secret } from "jsonwebtoken";
@@ -37,13 +31,6 @@ app.use(express.json());
 // Connect DataBase
 connectDataBase();
 
-// Server HTTPS
-const httpsOptions = {
-  key: fs.readFileSync(keyPath),
-  cert: fs.readFileSync(certPath),
-};
-const server = https.createServer(httpsOptions, app);
-
 // Cors
 const corsOptions = {
   origin: "http://localhost:5173",
@@ -66,4 +53,4 @@ app.get("/auth", async (req, res) => {
 
 app.use("/", autheticateToken, routes);
 
-server.listen(443, () => console.log("Init APP"));
+app.listen(port, () => console.log("Init APP"));
