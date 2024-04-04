@@ -4,6 +4,8 @@ import jwt, { Secret } from "jsonwebtoken";
 import { connectDataBase } from "./database/connect";
 import { routes } from "./router";
 
+const port = process.env.PORT || 3001;
+
 // Middlewares
 const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
   if ("token-auth" in req.headers) {
@@ -51,4 +53,4 @@ app.get("/auth", async (req, res) => {
 
 app.use("/", autheticateToken, routes);
 
-app.listen(3001, () => console.log("Init APP"));
+app.listen(port, () => console.log("Init APP on Port:", port));
