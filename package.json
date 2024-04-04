@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node ./dist/server.js"
+    "start": "tsx watch ./src/server.ts"
   },
   "author": "",
   "license": "ISC",
