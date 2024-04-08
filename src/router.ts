@@ -106,22 +106,19 @@ routes.get("/clients", async (req, res) => {
         if (address) {
           const { city, state } = address;
 
-          [
-            {
-              _id,
-              __v,
-              firstName,
-              address: { city, state },
-              password,
-              status,
-              update_at,
-              created_at,
-            },
-          ];
+          return {
+            _id,
+            __v,
+            firstName,
+            address: { city, state },
+            password,
+            status,
+            update_at,
+            created_at,
+          };
         }
       }
     );
-
     return res.status(200).json(clientsFilter);
   } catch (error: unknown) {
     if (error instanceof Error) {

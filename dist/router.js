@@ -91,8 +91,35 @@ routes.post("/clients/login/confirm", (req, res) => __awaiter(void 0, void 0, vo
         }
     }
 }));
-// Get clients
+// Get clients for public
 routes.get("/clients", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const clients = yield Client_1.Client.find({});
+        const clientsFilter = clients.map(({ firstName, address, _id, created_at, password, status, update_at, __v, }) => {
+            if (address) {
+                const { city, state } = address;
+                return {
+                    _id,
+                    __v,
+                    firstName,
+                    address: { city, state },
+                    password,
+                    status,
+                    update_at,
+                    created_at,
+                };
+            }
+        });
+        return res.status(200).json(clientsFilter);
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            return res.status(400).send(error.message);
+        }
+    }
+}));
+// Get clients for surveryors
+routes.get("/clientsBySurveyors", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const clients = yield Client_1.Client.find({});
         return res.status(200).json(clients);
