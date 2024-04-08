@@ -88,8 +88,50 @@ routes.post("/clients/login/confirm", async (req, res) => {
   }
 });
 
-// Get clients
+// Get clients for public
 routes.get("/clients", async (req, res) => {
+  try {
+    const clients = await Client.find({});
+    const clientsFilter = clients.map(
+      ({
+        firstName,
+        address,
+        _id,
+        created_at,
+        password,
+        status,
+        update_at,
+        __v,
+      }) => {
+        if (address) {
+          const { city, state } = address;
+
+          [
+            {
+              _id,
+              __v,
+              firstName,
+              address: { city, state },
+              password,
+              status,
+              update_at,
+              created_at,
+            },
+          ];
+        }
+      }
+    );
+
+    return res.status(200).json(clientsFilter);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(400).send(error.message);
+    }
+  }
+});
+
+// Get clients for surveryors
+routes.get("/clientsBySurveyors", async (req, res) => {
   try {
     const clients = await Client.find({});
     return res.status(200).json(clients);
