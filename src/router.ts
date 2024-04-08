@@ -118,7 +118,7 @@ routes.get("/clients", async (req, res) => {
 });
 
 // Get clients for surveryors
-routes.get("/clientsForSurveyors", async (req, res) => {
+routes.get("/clientsForSurveryors", async (req, res) => {
   try {
     const clients = await Client.find({});
     return res.status(200).json(clients);
