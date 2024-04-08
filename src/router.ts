@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { Client } from "./models/Client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -197,7 +197,7 @@ routes.post("/email", async (req, res) => {
     const client = await Client.findOne({ email });
 
     if (client === null) {
-      throw new Error("Email não encontrado!");
+      throw new Error("Email não cadastrado!");
     }
 
     if (process.env.EMAIL && process.env.PASSWORD_EMAIL) {
