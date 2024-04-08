@@ -93,16 +93,7 @@ routes.get("/clients", async (req, res) => {
   try {
     const clients = await Client.find({});
     const clientsFilter = clients.map(
-      ({
-        firstName,
-        address,
-        _id,
-        created_at,
-        password,
-        status,
-        update_at,
-        __v,
-      }) => {
+      ({ firstName, address, _id, created_at, status, update_at, __v }) => {
         if (address) {
           const { city, state } = address;
 
@@ -111,7 +102,6 @@ routes.get("/clients", async (req, res) => {
             __v,
             firstName,
             address: { city, state },
-            password,
             status,
             update_at,
             created_at,
@@ -128,7 +118,7 @@ routes.get("/clients", async (req, res) => {
 });
 
 // Get clients for surveryors
-routes.get("/clientsBySurveyors", async (req, res) => {
+routes.get("/clientsForSurveyors", async (req, res) => {
   try {
     const clients = await Client.find({});
     return res.status(200).json(clients);
