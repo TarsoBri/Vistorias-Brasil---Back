@@ -146,13 +146,9 @@ routes.get("/clients/:id", async (req, res) => {
 routes.patch("/clients/:id", async (req, res) => {
   try {
     const id: string = req.params.id;
-    const client: string | null = await Client.findByIdAndUpdate(
-      { _id: id },
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const client = await Client.findByIdAndUpdate({ _id: id }, req.body, {
+      new: true,
+    });
     return res.status(200).json(client);
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -175,7 +171,7 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
             req.body.newPassword,
             10
           );
-          const clientWithNewPassword = Client.findByIdAndUpdate(
+          const clientWithNewPassword = await Client.findByIdAndUpdate(
             { _id: id },
             {
               password: hashedNewPassword,
@@ -185,7 +181,7 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
               new: true,
             }
           );
-
+          console.log(clientWithNewPassword);
           return res.status(200).json(clientWithNewPassword);
         })
         .catch(() => {
