@@ -165,8 +165,7 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
                 }, {
                     new: true,
                 });
-                console.log(clientWithNewPassword);
-                return res.status(200).send("Senha alterada com sucesso!");
+                return res.status(200).json(clientWithNewPassword);
             }))
                 .catch(() => {
                 throw new Error("A sua senha está incorreta.");
