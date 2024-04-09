@@ -163,32 +163,32 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
     const id: string = req.params.id;
     const client = await Client.findOne({ _id: id });
 
-    if (client) {
-      await bcrypt
-        .compare(req.body.password, client.password)
-        .then(async () => {
-          const hashedNewPassword: string = await bcrypt.hash(
-            req.body.newPassword,
-            10
-          );
-          const clientWithNewPassword = await Client.findByIdAndUpdate(
-            { _id: id },
-            {
-              password: hashedNewPassword,
-              update_at: req.body.update_at,
-            },
-            {
-              new: true,
-            }
-          );
-          console.log(clientWithNewPassword);
-          return res.status(200).json(clientWithNewPassword);
-        })
-        .catch(() => {
-          throw new Error("A sua senha está incorreta.");
-        });
-    } else {
+    if (client === null) {
       throw new Error("Usuário não encontrado.");
+    }
+    const approvedPassword = await bcrypt.compare(
+      req.body.password,
+      client.password
+    );
+    if (approvedPassword) {
+      const hashedNewPassword: string = await bcrypt.hash(
+        req.body.newPassword,
+        10
+      );
+      const clientWithNewPassword = await Client.findByIdAndUpdate(
+        { _id: id },
+        {
+          password: hashedNewPassword,
+          update_at: req.body.update_at,
+        },
+        {
+          new: true,
+        }
+      );
+
+      return res.status(200).json(clientWithNewPassword);
+    } else {
+      throw new Error("A sua senha está incorreta.");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
