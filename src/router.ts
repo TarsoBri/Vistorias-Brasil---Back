@@ -80,6 +80,8 @@ routes.post("/clients/login/confirm", async (req, res) => {
       } else {
         throw new Error("Token inválido");
       }
+    } else {
+      throw new Error("Token inválido");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {

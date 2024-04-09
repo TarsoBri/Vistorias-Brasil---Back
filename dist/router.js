@@ -84,6 +84,9 @@ routes.post("/clients/login/confirm", (req, res) => __awaiter(void 0, void 0, vo
                 throw new Error("Token inválido");
             }
         }
+        else {
+            throw new Error("Token inválido");
+        }
     }
     catch (error) {
         if (error instanceof Error) {
