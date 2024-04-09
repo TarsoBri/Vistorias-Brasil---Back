@@ -98,7 +98,7 @@ routes.post("/clients/login/confirm", (req, res) => __awaiter(void 0, void 0, vo
 routes.get("/clients", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const clients = yield Client_1.Client.find({});
-        const clientsFilter = clients.map(({ firstName, address, _id, created_at, status, update_at, __v, surveryor, }) => {
+        const clientsFilter = clients.map(({ firstName, address, _id, created_at, status, update_at, __v, surveyor, }) => {
             if (address) {
                 const { city, state } = address;
                 return {
@@ -109,7 +109,7 @@ routes.get("/clients", (req, res) => __awaiter(void 0, void 0, void 0, function*
                     status,
                     update_at,
                     created_at,
-                    surveryor,
+                    surveyor,
                 };
             }
         });

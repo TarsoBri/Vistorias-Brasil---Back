@@ -103,7 +103,7 @@ routes.get("/clients", async (req, res) => {
         status,
         update_at,
         __v,
-        surveryor,
+        surveyor,
       }) => {
         if (address) {
           const { city, state } = address;
@@ -116,7 +116,7 @@ routes.get("/clients", async (req, res) => {
             status,
             update_at,
             created_at,
-            surveryor,
+            surveyor,
           };
         }
       }
