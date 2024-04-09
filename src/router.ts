@@ -92,7 +92,7 @@ routes.post("/clients/login/confirm", async (req, res) => {
   }
 });
 
-// Get clients for public
+// Get clients
 routes.get("/clients", async (req, res) => {
   try {
     const clients = await Client.find({});
@@ -114,29 +114,6 @@ routes.get("/clients", async (req, res) => {
       }
     );
     return res.status(200).json(clientsFilter);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      return res.status(400).send(error.message);
-    }
-  }
-});
-
-// Get clients for surveryors
-routes.get("/clientsForSurveryors", async (req, res) => {
-  try {
-    if ("surveryor" in req.headers) {
-      const token = req.headers["surveryor"];
-      if (token != "" && typeof token === "string") {
-        const tokenDecoded = jwt.decode(token) as JwtPayload;
-
-        if (tokenDecoded) {
-          const client = await Client.findOne({
-            _id: tokenDecoded.userId,
-          });
-          return res.status(200).json(client);
-        }
-      }
-    }
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
