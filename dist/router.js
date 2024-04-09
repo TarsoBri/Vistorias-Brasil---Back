@@ -23,8 +23,8 @@ exports.routes = routes;
 // Create client
 routes.post("/clients", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const existingUser = yield Client_1.Client.findOne({ email: req.body.email });
-        if (!existingUser) {
+        const existingClient = yield Client_1.Client.findOne({ email: req.body.email });
+        if (!existingClient) {
             const hashedPassword = yield bcrypt_1.default.hash(req.body.password, 10);
             const clientData = Object.assign(Object.assign({}, req.body), { password: hashedPassword });
             const client = yield Client_1.Client.create(clientData);
@@ -43,16 +43,16 @@ routes.post("/clients", (req, res) => __awaiter(void 0, void 0, void 0, function
 // Login
 routes.post("/clients/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield Client_1.Client.findOne({
+        const client = yield Client_1.Client.findOne({
             email: req.body.email,
         });
-        if (user === null) {
+        if (client === null) {
             throw new Error("Email não encontrado");
         }
-        const approvedPassword = yield bcrypt_1.default.compare(req.body.password, user.password);
+        const approvedPassword = yield bcrypt_1.default.compare(req.body.password, client.password);
         if (approvedPassword) {
-            const userId = user._id;
-            const token = jsonwebtoken_1.default.sign({ userId }, process.env.TOKEN_PASSWORD, {
+            const clientId = client._id;
+            const token = jsonwebtoken_1.default.sign({ clientId }, process.env.TOKEN_PASSWORD, {
                 expiresIn: "1h",
             });
             return res.status(200).json({ token });
@@ -75,10 +75,10 @@ routes.post("/clients/login/confirm", (req, res) => __awaiter(void 0, void 0, vo
             jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
             const tokenDecoded = jsonwebtoken_1.default.decode(token);
             if (tokenDecoded && typeof tokenDecoded === "object") {
-                const user = yield Client_1.Client.findOne({
+                const client = yield Client_1.Client.findOne({
                     _id: tokenDecoded.userId,
                 });
-                return res.status(201).json(user);
+                return res.status(201).json(client);
             }
             else {
                 throw new Error("Token inválido");
@@ -91,11 +91,11 @@ routes.post("/clients/login/confirm", (req, res) => __awaiter(void 0, void 0, vo
         }
     }
 }));
-// Get clients for public
+// Get clients
 routes.get("/clients", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const clients = yield Client_1.Client.find({});
-        const clientsFilter = clients.map(({ firstName, address, _id, created_at, status, update_at, __v }) => {
+        const clientsFilter = clients.map(({ firstName, address, _id, created_at, status, update_at, __v, surveryor, }) => {
             if (address) {
                 const { city, state } = address;
                 return {
@@ -106,22 +106,11 @@ routes.get("/clients", (req, res) => __awaiter(void 0, void 0, void 0, function*
                     status,
                     update_at,
                     created_at,
+                    surveryor,
                 };
             }
         });
         return res.status(200).json(clientsFilter);
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            return res.status(400).send(error.message);
-        }
-    }
-}));
-// Get clients for surveryors
-routes.get("/clientsForSurveryors", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const clients = yield Client_1.Client.find({});
-        return res.status(200).json(clients);
     }
     catch (error) {
         if (error instanceof Error) {
@@ -162,7 +151,7 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
     try {
         const id = req.params.id;
         const client = yield Client_1.Client.find({ _id: id });
-        const approvedPassword = yield bcrypt_1.default
+        yield bcrypt_1.default
             .compare(req.body.password, client[0].password)
             .then(() => __awaiter(void 0, void 0, void 0, function* () {
             const hashedNewPassword = yield bcrypt_1.default.hash(req.body.newPassword, 10);

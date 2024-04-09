@@ -20,9 +20,9 @@ const router_1 = require("./router");
 const port = process.env.PORT || 3001;
 // Middlewares
 const autheticateToken = (req, res, next) => {
-    if ("token-auth" in req.headers) {
-        const token = req.headers["token-auth"];
-        try {
+    try {
+        if ("token-auth" in req.headers) {
+            const token = req.headers["token-auth"];
             if (token && typeof token === "string") {
                 const decodedToken = jsonwebtoken_1.default.decode(token);
                 if (decodedToken && decodedToken.auth) {
@@ -33,14 +33,14 @@ const autheticateToken = (req, res, next) => {
                     throw new Error("Token inválidado!");
                 }
             }
-            else {
-                throw new Error("Token não recebido!");
-            }
         }
-        catch (error) {
-            if (error instanceof Error) {
-                return res.status(400).send(error.message);
-            }
+        else {
+            throw new Error("Token não recebido!");
+        }
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            return res.status(400).send(error.message);
         }
     }
 };

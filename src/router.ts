@@ -97,7 +97,16 @@ routes.get("/clients", async (req, res) => {
   try {
     const clients = await Client.find({});
     const clientsFilter = clients.map(
-      ({ firstName, address, _id, created_at, status, update_at, __v }) => {
+      ({
+        firstName,
+        address,
+        _id,
+        created_at,
+        status,
+        update_at,
+        __v,
+        surveryor,
+      }) => {
         if (address) {
           const { city, state } = address;
 
@@ -109,6 +118,7 @@ routes.get("/clients", async (req, res) => {
             status,
             update_at,
             created_at,
+            surveryor,
           };
         }
       }

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Client = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const ClientSchema = new mongoose_1.default.Schema({
-    surveyor: {
+    surveryor: {
         type: Boolean,
     },
     email: {
