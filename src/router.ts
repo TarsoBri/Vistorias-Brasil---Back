@@ -175,11 +175,14 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
             req.body.newPassword,
             10
           );
-          const clientWithNewPassword = Client.updateOne(
+          const clientWithNewPassword = Client.findByIdAndUpdate(
             { _id: id },
             {
               password: hashedNewPassword,
               update_at: req.body.update_at,
+            },
+            {
+              new: true,
             }
           );
 
