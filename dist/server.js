@@ -24,15 +24,23 @@ const autheticateToken = (req, res, next) => {
         const token = req.headers["token-auth"];
         try {
             if (token && typeof token === "string") {
-                jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
-                next();
+                const decodedToken = jsonwebtoken_1.default.decode(token);
+                if (decodedToken && decodedToken.auth) {
+                    jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
+                    next();
+                }
+                else {
+                    throw new Error("Token inválidado!");
+                }
             }
             else {
-                return res.send("Token não recebido!");
+                throw new Error("Token não recebido!");
             }
         }
         catch (error) {
-            return res.status(400).send("Não autorizado!");
+            if (error instanceof Error) {
+                return res.status(400).send(error.message);
+            }
         }
     }
 };
@@ -50,7 +58,8 @@ app.use((0, cors_1.default)(corsOptions));
 // Routers
 app.get("/auth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const tokenAuth = jsonwebtoken_1.default.sign({}, process.env.TOKEN_PASSWORD);
+        const auth = true;
+        const tokenAuth = jsonwebtoken_1.default.sign({ auth }, process.env.TOKEN_PASSWORD);
         return res.status(200).json({ tokenAuth });
     }
     catch (error) {

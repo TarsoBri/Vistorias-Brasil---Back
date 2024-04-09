@@ -6,19 +6,32 @@ import { routes } from "./router";
 
 const port = process.env.PORT || 3001;
 
+// Interafces
+interface decodedToken {
+  auth: boolean;
+  iat: number;
+}
+
 // Middlewares
 const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
-  if ("token-auth" in req.headers) {
-    const token = req.headers["token-auth"];
-    try {
+  try {
+    if ("token-auth" in req.headers) {
+      const token = req.headers["token-auth"];
       if (token && typeof token === "string") {
-        jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
-        next();
-      } else {
-        return res.send("Token não recebido!");
+        const decodedToken = jwt.decode(token) as decodedToken;
+        if (decodedToken && decodedToken.auth) {
+          jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
+          next();
+        } else {
+          throw new Error("Token inválidado!");
+        }
       }
-    } catch (error) {
-      return res.status(400).send("Não autorizado!");
+    } else {
+      throw new Error("Token não recebido!");
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(400).send(error.message);
     }
   }
 };
@@ -42,7 +55,8 @@ app.use(cors(corsOptions));
 // Routers
 app.get("/auth", async (req, res) => {
   try {
-    const tokenAuth = jwt.sign({}, process.env.TOKEN_PASSWORD as Secret);
+    const auth: boolean = true;
+    const tokenAuth = jwt.sign({ auth }, process.env.TOKEN_PASSWORD as Secret);
     return res.status(200).json({ tokenAuth });
   } catch (error: unknown) {
     if (error instanceof Error) {

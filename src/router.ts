@@ -1,8 +1,8 @@
-import express, { NextFunction, Request, Response } from "express";
+import express from "express";
 import { Client } from "./models/Client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import jwt, { Secret } from "jsonwebtoken";
+import jwt, { Secret, JwtPayload } from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 
 const routes = express.Router();
@@ -10,9 +10,9 @@ const routes = express.Router();
 // Create client
 routes.post("/clients", async (req, res) => {
   try {
-    const existingUser = await Client.findOne({ email: req.body.email });
+    const existingClient = await Client.findOne({ email: req.body.email });
 
-    if (!existingUser) {
+    if (!existingClient) {
       const hashedPassword: string = await bcrypt.hash(req.body.password, 10);
       const clientData = {
         ...req.body,
@@ -33,23 +33,27 @@ routes.post("/clients", async (req, res) => {
 // Login
 routes.post("/clients/login", async (req, res) => {
   try {
-    const user = await Client.findOne({
+    const client = await Client.findOne({
       email: req.body.email,
     });
 
-    if (user === null) {
+    if (client === null) {
       throw new Error("Email não encontrado");
     }
 
     const approvedPassword = await bcrypt.compare(
       req.body.password,
-      user.password
+      client.password
     );
     if (approvedPassword) {
-      const userId: ObjectId = user._id;
-      const token = jwt.sign({ userId }, process.env.TOKEN_PASSWORD as Secret, {
-        expiresIn: "1h",
-      });
+      const clientId: ObjectId = client._id;
+      const token = jwt.sign(
+        { clientId },
+        process.env.TOKEN_PASSWORD as Secret,
+        {
+          expiresIn: "1h",
+        }
+      );
 
       return res.status(200).json({ token });
     } else {
@@ -72,11 +76,11 @@ routes.post("/clients/login/confirm", async (req, res) => {
       const tokenDecoded = jwt.decode(token);
 
       if (tokenDecoded && typeof tokenDecoded === "object") {
-        const user = await Client.findOne({
+        const client = await Client.findOne({
           _id: tokenDecoded!.userId,
         });
 
-        return res.status(201).json(user);
+        return res.status(201).json(client);
       } else {
         throw new Error("Token inválido");
       }
@@ -120,8 +124,19 @@ routes.get("/clients", async (req, res) => {
 // Get clients for surveryors
 routes.get("/clientsForSurveryors", async (req, res) => {
   try {
-    const clients = await Client.find({});
-    return res.status(200).json(clients);
+    if ("surveryor" in req.headers) {
+      const token = req.headers["surveryor"];
+      if (token != "" && typeof token === "string") {
+        const tokenDecoded = jwt.decode(token) as JwtPayload;
+
+        if (tokenDecoded) {
+          const client = await Client.findOne({
+            _id: tokenDecoded.userId,
+          });
+          return res.status(200).json(client);
+        }
+      }
+    }
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
@@ -167,7 +182,7 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
     const id: string = req.params.id;
     const client = await Client.find({ _id: id });
 
-    const approvedPassword = await bcrypt
+    await bcrypt
       .compare(req.body.password, client[0].password)
       .then(async () => {
         const hashedNewPassword: string = await bcrypt.hash(
