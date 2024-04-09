@@ -153,20 +153,26 @@ routes.patch("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, fun
 routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = req.params.id;
-        const client = yield Client_1.Client.find({ _id: id });
-        yield bcrypt_1.default
-            .compare(req.body.password, client[0].password)
-            .then(() => __awaiter(void 0, void 0, void 0, function* () {
-            const hashedNewPassword = yield bcrypt_1.default.hash(req.body.newPassword, 10);
-            const clientWithNewPassword = Client_1.Client.updateOne({ _id: id }, {
-                password: hashedNewPassword,
-                update_at: req.body.update_at,
+        const client = yield Client_1.Client.findOne({ _id: id });
+        if (client) {
+            yield bcrypt_1.default
+                .compare(req.body.password, client.password)
+                .then(() => __awaiter(void 0, void 0, void 0, function* () {
+                const hashedNewPassword = yield bcrypt_1.default.hash(req.body.newPassword, 10);
+                const clientWithNewPassword = Client_1.Client.updateOne({ _id: id }, {
+                    password: hashedNewPassword,
+                    update_at: req.body.update_at,
+                });
+                console.log(clientWithNewPassword);
+                return res.status(200).send("Senha alterada com sucesso!");
+            }))
+                .catch(() => {
+                throw new Error("A sua senha está incorreta.");
             });
-            return res.status(200).json(clientWithNewPassword);
-        }))
-            .catch(() => {
-            throw new Error("A sua senha está incorreta.");
-        });
+        }
+        else {
+            throw new Error("Usuário não encontrado.");
+        }
     }
     catch (error) {
         if (error instanceof Error) {

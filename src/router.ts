@@ -2,7 +2,7 @@ import express from "express";
 import { Client } from "./models/Client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import jwt, { Secret, JwtPayload } from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 
 const routes = express.Router();
@@ -165,29 +165,33 @@ routes.patch("/clients/:id", async (req, res) => {
 routes.patch("/clients/changePassword/:id", async (req, res) => {
   try {
     const id: string = req.params.id;
-    const client = await Client.find({ _id: id });
+    const client = await Client.findOne({ _id: id });
 
-    await bcrypt
-      .compare(req.body.password, client[0].password)
-      .then(async () => {
-        const hashedNewPassword: string = await bcrypt.hash(
-          req.body.newPassword,
-          10
-        );
+    if (client) {
+      await bcrypt
+        .compare(req.body.password, client.password)
+        .then(async () => {
+          const hashedNewPassword: string = await bcrypt.hash(
+            req.body.newPassword,
+            10
+          );
+          const clientWithNewPassword = Client.updateOne(
+            { _id: id },
+            {
+              password: hashedNewPassword,
+              update_at: req.body.update_at,
+            }
+          );
 
-        const clientWithNewPassword = Client.updateOne(
-          { _id: id },
-          {
-            password: hashedNewPassword,
-            update_at: req.body.update_at,
-          }
-        );
-
-        return res.status(200).json(clientWithNewPassword);
-      })
-      .catch(() => {
-        throw new Error("A sua senha está incorreta.");
-      });
+          console.log(clientWithNewPassword);
+          return res.status(200).send("Senha alterada com sucesso!");
+        })
+        .catch(() => {
+          throw new Error("A sua senha está incorreta.");
+        });
+    } else {
+      throw new Error("Usuário não encontrado.");
+    }
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
