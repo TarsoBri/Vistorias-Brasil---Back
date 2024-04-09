@@ -51,8 +51,8 @@ routes.post("/clients/login", (req, res) => __awaiter(void 0, void 0, void 0, fu
         }
         const approvedPassword = yield bcrypt_1.default.compare(req.body.password, client.password);
         if (approvedPassword) {
-            const clientId = client._id;
-            const token = jsonwebtoken_1.default.sign({ clientId }, process.env.TOKEN_PASSWORD, {
+            const userId = client._id;
+            const token = jsonwebtoken_1.default.sign({ userId }, process.env.TOKEN_PASSWORD, {
                 expiresIn: "1h",
             });
             return res.status(200).json({ token });
