@@ -46,14 +46,10 @@ routes.post("/clients/login", async (req, res) => {
       client.password
     );
     if (approvedPassword) {
-      const clientId: ObjectId = client._id;
-      const token = jwt.sign(
-        { clientId },
-        process.env.TOKEN_PASSWORD as Secret,
-        {
-          expiresIn: "1h",
-        }
-      );
+      const userId: ObjectId = client._id;
+      const token = jwt.sign({ userId }, process.env.TOKEN_PASSWORD as Secret, {
+        expiresIn: "1h",
+      });
 
       return res.status(200).json({ token });
     } else {
