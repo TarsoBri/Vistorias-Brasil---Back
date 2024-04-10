@@ -227,7 +227,7 @@ routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0,
                     throw new Error("Falha ao enviar o email!");
                 }
                 else {
-                    res.status(200).json({ hashedCode });
+                    res.status(200).json({ hashedCode, email });
                 }
             });
         }
