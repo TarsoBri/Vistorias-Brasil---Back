@@ -222,7 +222,7 @@ interface ConfigEmail {
   html: string;
 }
 
-routes.post("/email", async (req, res) => {
+routes.post("/sendMailRecovery", async (req, res) => {
   try {
     const { email } = req.body;
     const client = await Client.findOne({ email });
@@ -246,24 +246,45 @@ routes.post("/email", async (req, res) => {
       const code = crypto.randomBytes(3).toString("hex");
       console.log(code);
 
+      const hashedCode: string = await bcrypt.hash(code, 1);
+
       const configEmail: ConfigEmail = {
         from: {
           name: "Vistorias Brasil",
           address: process.env.EMAIL,
         },
-        to: "tarsobrietzkeiracet@gmail.com",
+        to: email,
         subject: "Redefinição de senha",
-        html: `<p> Você solicitou a redfinição de senha no Vistorais Brasil, utilize o código a seguir para redefinir sua senha: </p> 
+        html: `<p>Olá ${client.firstName}, Você solicitou a redfinição de senha no Vistorais Brasil, utilize o código de validação a seguir para redefinir sua senha: </p> 
         <p> <strong>${code}</strong> </p>`,
       };
 
-      // transporter.sendMail(configEmail, (err, data) => {
-      //   if (err) {
-      //     throw new Error("Falha ao enviar o email!");
-      //   } else {
-      //     res.status(200).send("Sucesso ao enviar o email!");
-      //   }
-      // });
+      transporter.sendMail(configEmail, (err, data) => {
+        if (err) {
+          throw new Error("Falha ao enviar o email!");
+        } else {
+          res.status(200).json({ hashedCode });
+        }
+      });
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(400).send(error.message);
+    }
+  }
+});
+
+// Confirm Recovery
+routes.post("/sendMailRecovery/confirm", async (req, res) => {
+  try {
+    const approvedCode = await bcrypt.compare(
+      req.body.code,
+      req.body.hashedCode
+    );
+    if (approvedCode) {
+      return res.status(200).send("APROVED");
+    } else {
+      throw new Error("Código de validação não autorizado.");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {

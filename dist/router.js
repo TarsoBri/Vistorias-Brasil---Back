@@ -191,7 +191,7 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
 //   }
 // });
 const nodemailer_1 = __importDefault(require("nodemailer"));
-routes.post("/email", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email } = req.body;
         const client = yield Client_1.Client.findOne({ email });
@@ -211,23 +211,42 @@ routes.post("/email", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             });
             const code = crypto_1.default.randomBytes(3).toString("hex");
             console.log(code);
+            const hashedCode = yield bcrypt_1.default.hash(code, 1);
             const configEmail = {
                 from: {
                     name: "Vistorias Brasil",
                     address: process.env.EMAIL,
                 },
-                to: "tarsobrietzkeiracet@gmail.com",
+                to: email,
                 subject: "Redefinição de senha",
-                html: `<p> Você solicitou a redfinição de senha no Vistorais Brasil, utilize o código a seguir para redefinir sua senha: </p> 
+                html: `<p>Olá ${client.firstName}, Você solicitou a redfinição de senha no Vistorais Brasil, utilize o código de validação a seguir para redefinir sua senha: </p> 
         <p> <strong>${code}</strong> </p>`,
             };
-            // transporter.sendMail(configEmail, (err, data) => {
-            //   if (err) {
-            //     throw new Error("Falha ao enviar o email!");
-            //   } else {
-            //     res.status(200).send("Sucesso ao enviar o email!");
-            //   }
-            // });
+            transporter.sendMail(configEmail, (err, data) => {
+                if (err) {
+                    throw new Error("Falha ao enviar o email!");
+                }
+                else {
+                    res.status(200).json({ hashedCode });
+                }
+            });
+        }
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            return res.status(400).send(error.message);
+        }
+    }
+}));
+// Confirm Recovery
+routes.post("/sendMailRecovery/confirm", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const approvedCode = yield bcrypt_1.default.compare(req.body.code, req.body.hashedCode);
+        if (approvedCode) {
+            return res.status(200).send("APROVED");
+        }
+        else {
+            throw new Error("Código de validação não autorizado.");
         }
     }
     catch (error) {
