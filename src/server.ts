@@ -2,13 +2,14 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import jwt, { Secret } from "jsonwebtoken";
 import { connectDataBase } from "./database/connect";
+import bcrypt from "bcrypt";
 import { routes } from "./router";
 
 const port = process.env.PORT || 3001;
 
 // Interafces
 interface decodedToken {
-  auth: boolean;
+  auth: string;
   iat: number;
 }
 
@@ -18,9 +19,17 @@ const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
     if ("token-auth" in req.headers) {
       const token = req.headers["token-auth"];
       if (token && typeof token === "string") {
+        jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
+
         const decodedToken = jwt.decode(token) as decodedToken;
-        if (decodedToken && decodedToken.auth) {
-          jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
+        if (decodedToken && decodedToken.auth && process.env.PASSWORD_SERVER) {
+          const authToken: Promise<boolean> = bcrypt.compare(
+            process.env.PASSWORD_SERVER,
+            decodedToken.auth
+          );
+          if (!authToken) {
+            throw new Error("Senha do servidor incorreta.");
+          }
           next();
         } else {
           throw new Error("Token inválidado!");
@@ -55,9 +64,16 @@ app.use(cors(corsOptions));
 // Routers
 app.get("/auth", async (req, res) => {
   try {
-    const auth: boolean = true;
-    const tokenAuth = jwt.sign({ auth }, process.env.TOKEN_PASSWORD as Secret);
-    return res.status(200).json({ tokenAuth });
+    if (process.env.PASSWORD_SERVER) {
+      const auth = bcrypt.hash(process.env.PASSWORD_SERVER, 10);
+      const tokenAuth = jwt.sign(
+        { auth },
+        process.env.TOKEN_PASSWORD as Secret
+      );
+      return res.status(200).json({ tokenAuth });
+    } else {
+      throw new Error("Senha do servidor não recebida.");
+    }
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);

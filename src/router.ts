@@ -4,6 +4,18 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt, { Secret } from "jsonwebtoken";
 import { ObjectId } from "mongodb";
+import nodemailer from "nodemailer";
+
+// Interfaces
+interface ConfigEmail {
+  from: {
+    name: string;
+    address: string;
+  };
+  to: string;
+  subject: string;
+  html: string;
+}
 
 const routes = express.Router();
 
@@ -171,16 +183,20 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
       client.password
     );
 
-    let approvedPasswordHahed: boolean = false;
+    let approvedPasswordHashed: boolean = false;
 
     if (req.body.code && req.body.hashedCode) {
-      approvedPasswordHahed = await compareCodes(
-        req.body.code,
-        req.body.hashedCode
-      );
+      const compareHasheds = req.body.password == client.password;
+
+      if (compareHasheds) {
+        approvedPasswordHashed = await compareCodes(
+          req.body.code,
+          req.body.hashedCode
+        );
+      }
     }
 
-    if (approvedPassword || approvedPasswordHahed) {
+    if (approvedPassword || approvedPasswordHashed) {
       const hashedNewPassword: string = await bcrypt.hash(
         req.body.newPassword,
         10
@@ -207,31 +223,6 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
   }
 });
 
-// Delete client
-// routes.delete("/clients/:id", async (req, res) => {
-//   try {
-//     const id: string = req.params.id;
-//     const client = await Client.findByIdAndDelete({ _id: id });
-//     return res.status(200).json(client);
-//   } catch (error: unknown) {
-//     if (error instanceof Error) {
-//       return res.status(400).send(error.message);
-//     }
-//   }
-// });
-
-import nodemailer from "nodemailer";
-
-interface ConfigEmail {
-  from: {
-    name: string;
-    address: string;
-  };
-  to: string;
-  subject: string;
-  html: string;
-}
-
 routes.post("/sendMailRecovery", async (req, res) => {
   try {
     const { email } = req.body;
@@ -256,7 +247,7 @@ routes.post("/sendMailRecovery", async (req, res) => {
       const code = crypto.randomBytes(3).toString("hex");
       console.log(code);
 
-      const hashedCode: string = await bcrypt.hash(code, 1);
+      const hashedCode: string = await bcrypt.hash(code, 10);
 
       const configEmail: ConfigEmail = {
         from: {

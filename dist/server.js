@@ -16,6 +16,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const connect_1 = require("./database/connect");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const router_1 = require("./router");
 const port = process.env.PORT || 3001;
 // Middlewares
@@ -24,9 +25,13 @@ const autheticateToken = (req, res, next) => {
         if ("token-auth" in req.headers) {
             const token = req.headers["token-auth"];
             if (token && typeof token === "string") {
+                jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
                 const decodedToken = jsonwebtoken_1.default.decode(token);
-                if (decodedToken && decodedToken.auth) {
-                    jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
+                if (decodedToken && decodedToken.auth && process.env.PASSWORD_SERVER) {
+                    const authToken = bcrypt_1.default.compare(process.env.PASSWORD_SERVER, decodedToken.auth);
+                    if (!authToken) {
+                        throw new Error("Senha do servidor incorreta.");
+                    }
                     next();
                 }
                 else {
@@ -58,9 +63,14 @@ app.use((0, cors_1.default)(corsOptions));
 // Routers
 app.get("/auth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const auth = true;
-        const tokenAuth = jsonwebtoken_1.default.sign({ auth }, process.env.TOKEN_PASSWORD);
-        return res.status(200).json({ tokenAuth });
+        if (process.env.PASSWORD_SERVER) {
+            const auth = bcrypt_1.default.hash(process.env.PASSWORD_SERVER, 10);
+            const tokenAuth = jsonwebtoken_1.default.sign({ auth }, process.env.TOKEN_PASSWORD);
+            return res.status(200).json({ tokenAuth });
+        }
+        else {
+            throw new Error("Senha do servidor não recebida.");
+        }
     }
     catch (error) {
         if (error instanceof Error) {

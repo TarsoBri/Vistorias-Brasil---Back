@@ -18,6 +18,7 @@ const Client_1 = require("./models/Client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const crypto_1 = __importDefault(require("crypto"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const nodemailer_1 = __importDefault(require("nodemailer"));
 const routes = express_1.default.Router();
 exports.routes = routes;
 // Create client
@@ -158,11 +159,14 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
             throw new Error("Usuário não encontrado.");
         }
         const approvedPassword = yield bcrypt_1.default.compare(req.body.password, client.password);
-        let approvedPasswordHahed = false;
+        let approvedPasswordHashed = false;
         if (req.body.code && req.body.hashedCode) {
-            approvedPasswordHahed = yield compareCodes(req.body.code, req.body.hashedCode);
+            const compareHasheds = req.body.password == client.password;
+            if (compareHasheds) {
+                approvedPasswordHashed = yield compareCodes(req.body.code, req.body.hashedCode);
+            }
         }
-        if (approvedPassword || approvedPasswordHahed) {
+        if (approvedPassword || approvedPasswordHashed) {
             const hashedNewPassword = yield bcrypt_1.default.hash(req.body.newPassword, 10);
             const clientWithNewPassword = yield Client_1.Client.findByIdAndUpdate({ _id: id }, {
                 password: hashedNewPassword,
@@ -182,19 +186,6 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
         }
     }
 }));
-// Delete client
-// routes.delete("/clients/:id", async (req, res) => {
-//   try {
-//     const id: string = req.params.id;
-//     const client = await Client.findByIdAndDelete({ _id: id });
-//     return res.status(200).json(client);
-//   } catch (error: unknown) {
-//     if (error instanceof Error) {
-//       return res.status(400).send(error.message);
-//     }
-//   }
-// });
-const nodemailer_1 = __importDefault(require("nodemailer"));
 routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email } = req.body;
@@ -215,7 +206,7 @@ routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0,
             });
             const code = crypto_1.default.randomBytes(3).toString("hex");
             console.log(code);
-            const hashedCode = yield bcrypt_1.default.hash(code, 1);
+            const hashedCode = yield bcrypt_1.default.hash(code, 10);
             const configEmail = {
                 from: {
                     name: "Vistorias Brasil",
