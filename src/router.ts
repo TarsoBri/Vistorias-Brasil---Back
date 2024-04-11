@@ -170,7 +170,17 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
       req.body.password,
       client.password
     );
-    if (approvedPassword) {
+
+    let approvedPasswordHahed: boolean = false;
+
+    if (req.body.code && req.body.hashedCode) {
+      approvedPasswordHahed = await compareCodes(
+        req.body.code,
+        req.body.hashedCode
+      );
+    }
+
+    if (approvedPassword || approvedPasswordHahed) {
       const hashedNewPassword: string = await bcrypt.hash(
         req.body.newPassword,
         10
@@ -228,7 +238,7 @@ routes.post("/sendMailRecovery", async (req, res) => {
     const client = await Client.findOne({ email });
 
     if (client === null) {
-      throw new Error("Email não cadastrado!");
+      throw new Error("Email ainda não cadastrado!");
     }
 
     if (process.env.EMAIL && process.env.PASSWORD_EMAIL) {
@@ -277,10 +287,8 @@ routes.post("/sendMailRecovery", async (req, res) => {
 // Confirm Recovery
 routes.post("/sendMailRecovery/confirm", async (req, res) => {
   try {
-    const approvedCode = await bcrypt.compare(
-      req.body.code,
-      req.body.hashedCode
-    );
+    const approvedCode = await compareCodes(req.body.code, req.body.hashedCode);
+
     if (approvedCode) {
       return res.status(200).send("APPROVED");
     } else {
@@ -292,5 +300,12 @@ routes.post("/sendMailRecovery/confirm", async (req, res) => {
     }
   }
 });
+
+const compareCodes = async (
+  code: string,
+  hashedCode: string
+): Promise<boolean> => {
+  return await bcrypt.compare(code, hashedCode);
+};
 
 export { routes };

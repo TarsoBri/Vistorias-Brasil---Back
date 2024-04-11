@@ -158,7 +158,11 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
             throw new Error("Usuário não encontrado.");
         }
         const approvedPassword = yield bcrypt_1.default.compare(req.body.password, client.password);
-        if (approvedPassword) {
+        let approvedPasswordHahed = false;
+        if (req.body.code && req.body.hashedCode) {
+            approvedPasswordHahed = yield compareCodes(req.body.code, req.body.hashedCode);
+        }
+        if (approvedPassword || approvedPasswordHahed) {
             const hashedNewPassword = yield bcrypt_1.default.hash(req.body.newPassword, 10);
             const clientWithNewPassword = yield Client_1.Client.findByIdAndUpdate({ _id: id }, {
                 password: hashedNewPassword,
@@ -196,7 +200,7 @@ routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0,
         const { email } = req.body;
         const client = yield Client_1.Client.findOne({ email });
         if (client === null) {
-            throw new Error("Email não cadastrado!");
+            throw new Error("Email ainda não cadastrado!");
         }
         if (process.env.EMAIL && process.env.PASSWORD_EMAIL) {
             const transporter = nodemailer_1.default.createTransport({
@@ -241,7 +245,7 @@ routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0,
 // Confirm Recovery
 routes.post("/sendMailRecovery/confirm", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const approvedCode = yield bcrypt_1.default.compare(req.body.code, req.body.hashedCode);
+        const approvedCode = yield compareCodes(req.body.code, req.body.hashedCode);
         if (approvedCode) {
             return res.status(200).send("APPROVED");
         }
@@ -255,3 +259,6 @@ routes.post("/sendMailRecovery/confirm", (req, res) => __awaiter(void 0, void 0,
         }
     }
 }));
+const compareCodes = (code, hashedCode) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield bcrypt_1.default.compare(code, hashedCode);
+});
