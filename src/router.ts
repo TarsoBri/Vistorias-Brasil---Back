@@ -282,7 +282,7 @@ routes.post("/sendMailRecovery/confirm", async (req, res) => {
       req.body.hashedCode
     );
     if (approvedCode) {
-      return res.status(200).send("APROVED");
+      return res.status(200).send("APPROVED");
     } else {
       throw new Error("Código de validação não autorizado.");
     }

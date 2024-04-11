@@ -243,7 +243,7 @@ routes.post("/sendMailRecovery/confirm", (req, res) => __awaiter(void 0, void 0,
     try {
         const approvedCode = yield bcrypt_1.default.compare(req.body.code, req.body.hashedCode);
         if (approvedCode) {
-            return res.status(200).send("APROVED");
+            return res.status(200).send("APPROVED");
         }
         else {
             throw new Error("Código de validação não autorizado.");
