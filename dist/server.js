@@ -64,7 +64,7 @@ app.use((0, cors_1.default)(corsOptions));
 app.get("/auth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (process.env.PASSWORD_SERVER) {
-            const auth = bcrypt_1.default.hash(process.env.PASSWORD_SERVER, 10);
+            const auth = yield bcrypt_1.default.hash(process.env.PASSWORD_SERVER, 10);
             const tokenAuth = jsonwebtoken_1.default.sign({ auth }, process.env.TOKEN_PASSWORD);
             return res.status(200).json({ tokenAuth });
         }

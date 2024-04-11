@@ -65,7 +65,7 @@ app.use(cors(corsOptions));
 app.get("/auth", async (req, res) => {
   try {
     if (process.env.PASSWORD_SERVER) {
-      const auth = bcrypt.hash(process.env.PASSWORD_SERVER, 10);
+      const auth = await bcrypt.hash(process.env.PASSWORD_SERVER, 10);
       const tokenAuth = jwt.sign(
         { auth },
         process.env.TOKEN_PASSWORD as Secret
