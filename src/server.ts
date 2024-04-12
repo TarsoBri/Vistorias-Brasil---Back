@@ -51,7 +51,8 @@ const corsOptions = {
   origin: "http://localhost:5173",
   optionsSuccessStatus: 200,
   preflightContinue: false,
-  exposedHeaders: ["Content-Type"],
+  allowedHeaders: ["Content-Type", "Token-Auth"],
+  exposedHeaders: [],
 };
 
 app.use(cors(corsOptions));
