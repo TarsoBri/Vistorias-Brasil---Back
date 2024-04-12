@@ -50,16 +50,16 @@ const autheticateToken = (req, res, next) => {
     }
 };
 const app = (0, express_1.default)();
+const corsOptions = {
+    origin: "localhost:5173",
+    optionsSuccessStatus: 200,
+};
+app.use((0, cors_1.default)(corsOptions));
 // Use Json in express
 app.use(express_1.default.json());
 // Connect DataBase
 (0, connect_1.connectDataBase)();
 // Cors
-const corsOptions = {
-    origin: "http://localhost:5173",
-    optionsSuccessStatus: 200,
-};
-app.use((0, cors_1.default)(corsOptions));
 // Routers
 app.get("/auth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

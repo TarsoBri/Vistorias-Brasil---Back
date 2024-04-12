@@ -47,6 +47,13 @@ const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
 
 const app = express();
 
+const corsOptions = {
+  origin: "localhost:5173",
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
 // Use Json in express
 app.use(express.json());
 
@@ -54,12 +61,6 @@ app.use(express.json());
 connectDataBase();
 
 // Cors
-const corsOptions = {
-  origin: "http://localhost:5173",
-  optionsSuccessStatus: 200,
-};
-
-app.use(cors(corsOptions));
 
 // Routers
 app.get("/auth", async (req, res) => {
