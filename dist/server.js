@@ -51,7 +51,7 @@ const autheticateToken = (req, res, next) => {
 };
 const app = (0, express_1.default)();
 const corsOptions = {
-    origin: "localhost:5173",
+    origin: "http://localhost:5173",
     optionsSuccessStatus: 200,
 };
 app.use((0, cors_1.default)(corsOptions));
