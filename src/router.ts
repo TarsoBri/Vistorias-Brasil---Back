@@ -178,22 +178,25 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
     if (client === null) {
       throw new Error("Usuário não encontrado.");
     }
-    const approvedPassword = await bcrypt.compare(
-      req.body.password,
-      client.password
-    );
 
     let approvedPasswordHashed: boolean = false;
+    let approvedPassword: boolean = false;
 
     if (req.body.code && req.body.hashedCode) {
       const compareHasheds = req.body.password == client.password;
-
       if (compareHasheds) {
         approvedPasswordHashed = await compareCodes(
           req.body.code,
           req.body.hashedCode
         );
+      } else {
+        throw new Error("Sua senha está incorreta.");
       }
+    } else {
+      approvedPassword = await bcrypt.compare(
+        req.body.password,
+        client.password
+      );
     }
 
     if (approvedPassword || approvedPasswordHashed) {
@@ -214,7 +217,7 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
 
       return res.status(200).json(clientWithNewPassword);
     } else {
-      throw new Error("A sua senha está incorreta.");
+      throw new Error("Falha ao enviar senha.");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
