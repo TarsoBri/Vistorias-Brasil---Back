@@ -73,8 +73,7 @@ routes.post("/clients/login/confirm", (req, res) => __awaiter(void 0, void 0, vo
     try {
         const { token } = req.body;
         if (token != "") {
-            jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
-            const tokenDecoded = jsonwebtoken_1.default.decode(token);
+            const tokenDecoded = jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
             if (tokenDecoded && typeof tokenDecoded === "object") {
                 const client = yield Client_1.Client.findOne({
                     _id: tokenDecoded.userId,
@@ -139,10 +138,22 @@ routes.get("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, funct
 routes.patch("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = req.params.id;
-        const client = yield Client_1.Client.findByIdAndUpdate({ _id: id }, req.body, {
-            new: true,
-        });
-        return res.status(200).json(client);
+        const authToken = req.headers["login-auth"];
+        if (authToken && typeof authToken === "string") {
+            const decodedAuthToken = jsonwebtoken_1.default.verify(authToken, process.env.TOKEN_PASSWORD);
+            if (decodedAuthToken.userId === id) {
+                const client = yield Client_1.Client.findByIdAndUpdate({ _id: id }, req.body, {
+                    new: true,
+                });
+                return res.status(200).json(client);
+            }
+            else {
+                throw new Error("Token não autoriado.");
+            }
+        }
+        else {
+            throw new Error("Token não encontrado.");
+        }
     }
     catch (error) {
         if (error instanceof Error) {
@@ -170,7 +181,7 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
             }
         }
         else {
-            approvedPassword = yield bcrypt_1.default.compare(req.body.password, client.password);
+            approvedPassword = yield compareCodes(req.body.password, client.password);
         }
         if (approvedPassword || approvedPasswordHashed) {
             const hashedNewPassword = yield bcrypt_1.default.hash(req.body.newPassword, 10);
@@ -197,7 +208,7 @@ routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0,
         const { email } = req.body;
         const client = yield Client_1.Client.findOne({ email });
         if (client === null) {
-            throw new Error("Email ainda não cadastrado!");
+            throw new Error("Email ainda não cadastrado.");
         }
         if (process.env.EMAIL && process.env.PASSWORD_EMAIL) {
             const transporter = nodemailer_1.default.createTransport({
@@ -225,7 +236,7 @@ routes.post("/sendMailRecovery", (req, res) => __awaiter(void 0, void 0, void 0,
             };
             transporter.sendMail(configEmail, (err, data) => {
                 if (err) {
-                    throw new Error("Falha ao enviar o email!");
+                    throw new Error("Falha ao enviar o email.");
                 }
                 else {
                     res.status(200).json({ hashedCode, email, id: client._id });

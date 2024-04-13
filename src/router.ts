@@ -17,6 +17,11 @@ interface ConfigEmail {
   html: string;
 }
 
+interface DecodedTokenLogin {
+  userId: string;
+  iat: number;
+}
+
 const routes = express.Router();
 
 // Create client
@@ -79,9 +84,10 @@ routes.post("/clients/login/confirm", async (req, res) => {
   try {
     const { token } = req.body;
     if (token != "") {
-      jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
-
-      const tokenDecoded = jwt.decode(token);
+      const tokenDecoded = jwt.verify(
+        token,
+        process.env.TOKEN_PASSWORD as Secret
+      );
 
       if (tokenDecoded && typeof tokenDecoded === "object") {
         const client = await Client.findOne({
@@ -158,10 +164,24 @@ routes.get("/clients/:id", async (req, res) => {
 routes.patch("/clients/:id", async (req, res) => {
   try {
     const id: string = req.params.id;
-    const client = await Client.findByIdAndUpdate({ _id: id }, req.body, {
-      new: true,
-    });
-    return res.status(200).json(client);
+    const authToken = req.headers["login-auth"];
+
+    if (authToken && typeof authToken === "string") {
+      const decodedAuthToken = jwt.verify(
+        authToken,
+        process.env.TOKEN_PASSWORD as Secret
+      ) as DecodedTokenLogin;
+      if (decodedAuthToken.userId === id) {
+        const client = await Client.findByIdAndUpdate({ _id: id }, req.body, {
+          new: true,
+        });
+        return res.status(200).json(client);
+      } else {
+        throw new Error("Token não autoriado.");
+      }
+    } else {
+      throw new Error("Token não encontrado.");
+    }
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
@@ -193,10 +213,7 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
         throw new Error("Sua senha está incorreta.");
       }
     } else {
-      approvedPassword = await bcrypt.compare(
-        req.body.password,
-        client.password
-      );
+      approvedPassword = await compareCodes(req.body.password, client.password);
     }
 
     if (approvedPassword || approvedPasswordHashed) {
@@ -232,7 +249,7 @@ routes.post("/sendMailRecovery", async (req, res) => {
     const client = await Client.findOne({ email });
 
     if (client === null) {
-      throw new Error("Email ainda não cadastrado!");
+      throw new Error("Email ainda não cadastrado.");
     }
 
     if (process.env.EMAIL && process.env.PASSWORD_EMAIL) {
@@ -265,7 +282,7 @@ routes.post("/sendMailRecovery", async (req, res) => {
 
       transporter.sendMail(configEmail, (err, data) => {
         if (err) {
-          throw new Error("Falha ao enviar o email!");
+          throw new Error("Falha ao enviar o email.");
         } else {
           res.status(200).json({ hashedCode, email, id: client._id });
         }

@@ -25,8 +25,7 @@ const autheticateToken = (req, res, next) => {
         if ("token-auth" in req.headers) {
             const token = req.headers["token-auth"];
             if (token && typeof token === "string") {
-                jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
-                const decodedToken = jsonwebtoken_1.default.decode(token);
+                const decodedToken = jsonwebtoken_1.default.verify(token, process.env.TOKEN_PASSWORD);
                 if (decodedToken && decodedToken.auth && process.env.PASSWORD_SERVER) {
                     const authToken = bcrypt_1.default.compare(process.env.PASSWORD_SERVER, decodedToken.auth);
                     if (!authToken) {
@@ -35,12 +34,12 @@ const autheticateToken = (req, res, next) => {
                     next();
                 }
                 else {
-                    throw new Error("Token inválidado!");
+                    throw new Error("Token inválidado.");
                 }
             }
         }
         else {
-            throw new Error("Token não recebido!");
+            throw new Error("Token não recebido.");
         }
     }
     catch (error) {
@@ -54,7 +53,7 @@ const corsOptions = {
     origin: "http://localhost:5173",
     optionsSuccessStatus: 200,
     preflightContinue: false,
-    allowedHeaders: ["Content-Type", "Token-Auth"],
+    allowedHeaders: ["Content-Type", "Token-Auth", "Login-Auth"],
     exposedHeaders: [],
 };
 app.use((0, cors_1.default)(corsOptions));

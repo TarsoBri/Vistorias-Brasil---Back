@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import jwt, { Secret } from "jsonwebtoken";
+import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import { connectDataBase } from "./database/connect";
 import bcrypt from "bcrypt";
 import { routes } from "./router";
@@ -8,7 +8,7 @@ import { routes } from "./router";
 const port = process.env.PORT || 3001;
 
 // Interafces
-interface decodedToken {
+interface DecodedToken {
   auth: string;
   iat: number;
 }
@@ -19,9 +19,11 @@ const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
     if ("token-auth" in req.headers) {
       const token = req.headers["token-auth"];
       if (token && typeof token === "string") {
-        jwt.verify(token, process.env.TOKEN_PASSWORD as Secret);
+        const decodedToken = jwt.verify(
+          token,
+          process.env.TOKEN_PASSWORD as Secret
+        ) as DecodedToken;
 
-        const decodedToken = jwt.decode(token) as decodedToken;
         if (decodedToken && decodedToken.auth && process.env.PASSWORD_SERVER) {
           const authToken: Promise<boolean> = bcrypt.compare(
             process.env.PASSWORD_SERVER,
@@ -32,11 +34,11 @@ const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
           }
           next();
         } else {
-          throw new Error("Token inválidado!");
+          throw new Error("Token inválidado.");
         }
       }
     } else {
-      throw new Error("Token não recebido!");
+      throw new Error("Token não recebido.");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -51,7 +53,7 @@ const corsOptions = {
   origin: "http://localhost:5173",
   optionsSuccessStatus: 200,
   preflightContinue: false,
-  allowedHeaders: ["Content-Type", "Token-Auth"],
+  allowedHeaders: ["Content-Type", "Token-Auth", "Login-Auth"],
   exposedHeaders: [],
 };
 
