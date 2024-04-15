@@ -150,9 +150,31 @@ routes.get("/clients", async (req, res) => {
 // Get client by id
 routes.get("/clients/:id", async (req, res) => {
   try {
+    const authToken = req.headers["login-auth"];
+
     const id: string = req.params.id;
-    const client = await Client.find({ _id: id });
-    return res.status(200).json(client);
+    const client = await Client.findOne({ _id: id });
+
+    if (authToken && typeof authToken === "string") {
+      const decodedAuthToken = jwt.verify(
+        authToken,
+        process.env.TOKEN_PASSWORD as Secret
+      ) as DecodedTokenLogin;
+
+      const clientSurveryor = await Client.findOne({
+        _id: decodedAuthToken.userId,
+      });
+
+      if (client && clientSurveryor && clientSurveryor.surveyor) {
+        const { password, ...clientFilter } = client;
+
+        return res.status(200).json(clientFilter);
+      } else {
+        throw new Error("Acesso negado.");
+      }
+    } else {
+      throw new Error("Token de autorização negado.");
+    }
   } catch (error: unknown) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
@@ -203,14 +225,13 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
     let approvedPassword: boolean = false;
 
     if (req.body.code && req.body.hashedCode) {
-      const compareHasheds = req.body.password == client.password;
-      if (compareHasheds) {
-        approvedPasswordHashed = await compareCodes(
-          req.body.code,
-          req.body.hashedCode
-        );
-      } else {
-        throw new Error("Sua senha está incorreta.");
+      approvedPasswordHashed = await compareCodes(
+        req.body.code,
+        req.body.hashedCode
+      );
+
+      if (!approvedPassword) {
+        throw new Error("Código está incorreta.");
       }
     } else {
       approvedPassword = await compareCodes(req.body.password, client.password);
