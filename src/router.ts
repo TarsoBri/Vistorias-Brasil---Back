@@ -233,7 +233,7 @@ routes.patch("/clients/:id", async (req, res) => {
 });
 
 // Patch status client
-routes.patch("/clients/:id", async (req, res) => {
+routes.patch("/clients/status/:id", async (req, res) => {
   try {
     const id: string = req.params.id;
     const authToken = req.headers["login-auth"];

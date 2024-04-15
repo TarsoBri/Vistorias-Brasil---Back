@@ -189,7 +189,7 @@ routes.patch("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, fun
     }
 }));
 // Patch status client
-routes.patch("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+routes.patch("/clients/status/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = req.params.id;
         const authToken = req.headers["login-auth"];
