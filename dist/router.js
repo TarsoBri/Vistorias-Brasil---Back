@@ -188,6 +188,36 @@ routes.patch("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, fun
         }
     }
 }));
+// Patch status client
+routes.patch("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = req.params.id;
+        const authToken = req.headers["login-auth"];
+        if (authToken && typeof authToken === "string") {
+            const decodedAuthToken = jsonwebtoken_1.default.verify(authToken, process.env.TOKEN_PASSWORD);
+            const clientSurveryor = yield Client_1.Client.findOne({
+                _id: decodedAuthToken.userId,
+            });
+            if (clientSurveryor && clientSurveryor.surveyor) {
+                const client = yield Client_1.Client.findByIdAndUpdate({ _id: id }, req.body.status, {
+                    new: true,
+                });
+                return res.status(200).json(client);
+            }
+            else {
+                throw new Error("Usuário não autorizado.");
+            }
+        }
+        else {
+            throw new Error("Token não encontrado.");
+        }
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            return res.status(400).send(error.message);
+        }
+    }
+}));
 //Patch password client
 routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

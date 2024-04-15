@@ -232,6 +232,44 @@ routes.patch("/clients/:id", async (req, res) => {
   }
 });
 
+// Patch status client
+routes.patch("/clients/:id", async (req, res) => {
+  try {
+    const id: string = req.params.id;
+    const authToken = req.headers["login-auth"];
+
+    if (authToken && typeof authToken === "string") {
+      const decodedAuthToken = jwt.verify(
+        authToken,
+        process.env.TOKEN_PASSWORD as Secret
+      ) as DecodedTokenLogin;
+
+      const clientSurveryor = await Client.findOne({
+        _id: decodedAuthToken.userId,
+      });
+
+      if (clientSurveryor && clientSurveryor.surveyor) {
+        const client = await Client.findByIdAndUpdate(
+          { _id: id },
+          req.body.status,
+          {
+            new: true,
+          }
+        );
+        return res.status(200).json(client);
+      } else {
+        throw new Error("Usuário não autorizado.");
+      }
+    } else {
+      throw new Error("Token não encontrado.");
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(400).send(error.message);
+    }
+  }
+});
+
 //Patch password client
 routes.patch("/clients/changePassword/:id", async (req, res) => {
   try {
