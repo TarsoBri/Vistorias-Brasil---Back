@@ -8,17 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -144,8 +133,19 @@ routes.get("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, funct
                 _id: decodedAuthToken.userId,
             });
             if (client && clientSurveryor && clientSurveryor.surveyor) {
-                const { password } = client, clientFilter = __rest(client, ["password"]);
-                return res.status(200).json(clientFilter);
+                const { __v, _id, firstName, email, address, phone, created_at, status, update_at, surveyor, } = client;
+                return res.status(200).json({
+                    __v,
+                    _id,
+                    firstName,
+                    email,
+                    address,
+                    phone,
+                    created_at,
+                    status,
+                    update_at,
+                    surveyor,
+                });
             }
             else {
                 throw new Error("Acesso negado.");
@@ -218,7 +218,7 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
             return res.status(200).json(clientWithNewPassword);
         }
         else {
-            throw new Error("Falha ao enviar senha.");
+            throw new Error("Sua senha está incorreta.");
         }
     }
     catch (error) {

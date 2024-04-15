@@ -19,7 +19,6 @@ const ClientSchema = new mongoose_1.default.Schema({
     },
     password: {
         type: String,
-        required: true,
     },
     firstName: {
         type: String,

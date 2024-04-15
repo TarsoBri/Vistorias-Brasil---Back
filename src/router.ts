@@ -60,7 +60,7 @@ routes.post("/clients/login", async (req, res) => {
 
     const approvedPassword = await bcrypt.compare(
       req.body.password,
-      client.password
+      client.password as string
     );
     if (approvedPassword) {
       const userId: ObjectId = client._id;
@@ -166,9 +166,30 @@ routes.get("/clients/:id", async (req, res) => {
       });
 
       if (client && clientSurveryor && clientSurveryor.surveyor) {
-        const { password, ...clientFilter } = client;
-
-        return res.status(200).json(clientFilter);
+        const {
+          __v,
+          _id,
+          firstName,
+          email,
+          address,
+          phone,
+          created_at,
+          status,
+          update_at,
+          surveyor,
+        } = client;
+        return res.status(200).json({
+          __v,
+          _id,
+          firstName,
+          email,
+          address,
+          phone,
+          created_at,
+          status,
+          update_at,
+          surveyor,
+        });
       } else {
         throw new Error("Acesso negado.");
       }
@@ -234,7 +255,10 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
         throw new Error("Código está incorreta.");
       }
     } else {
-      approvedPassword = await compareCodes(req.body.password, client.password);
+      approvedPassword = await compareCodes(
+        req.body.password,
+        client.password as string
+      );
     }
 
     if (approvedPassword || approvedPasswordHashed) {
@@ -255,7 +279,7 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
 
       return res.status(200).json(clientWithNewPassword);
     } else {
-      throw new Error("Falha ao enviar senha.");
+      throw new Error("Sua senha está incorreta.");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
