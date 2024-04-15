@@ -199,7 +199,7 @@ routes.patch("/clients/status/:id", (req, res) => __awaiter(void 0, void 0, void
                 _id: decodedAuthToken.userId,
             });
             if (clientSurveryor && clientSurveryor.surveyor) {
-                const client = yield Client_1.Client.findByIdAndUpdate({ _id: id }, req.body.status, {
+                const client = yield Client_1.Client.findByIdAndUpdate({ _id: id }, req.body, {
                     new: true,
                 });
                 return res.status(200).json(client);

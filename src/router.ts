@@ -249,13 +249,9 @@ routes.patch("/clients/status/:id", async (req, res) => {
       });
 
       if (clientSurveryor && clientSurveryor.surveyor) {
-        const client = await Client.findByIdAndUpdate(
-          { _id: id },
-          req.body.status,
-          {
-            new: true,
-          }
-        );
+        const client = await Client.findByIdAndUpdate({ _id: id }, req.body, {
+          new: true,
+        });
         return res.status(200).json(client);
       } else {
         throw new Error("Usuário não autorizado.");
