@@ -284,9 +284,8 @@ routes.patch("/clients/changePassword/:id", async (req, res) => {
         req.body.code,
         req.body.hashedCode
       );
-
-      if (!approvedPassword) {
-        throw new Error("Código está incorreta.");
+      if (!approvedPasswordHashed) {
+        throw new Error("Código está incorreto.");
       }
     } else {
       approvedPassword = await compareCodes(

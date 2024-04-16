@@ -230,8 +230,8 @@ routes.patch("/clients/changePassword/:id", (req, res) => __awaiter(void 0, void
         let approvedPassword = false;
         if (req.body.code && req.body.hashedCode) {
             approvedPasswordHashed = yield compareCodes(req.body.code, req.body.hashedCode);
-            if (!approvedPassword) {
-                throw new Error("Código está incorreta.");
+            if (!approvedPasswordHashed) {
+                throw new Error("Código está incorreto.");
             }
         }
         else {
