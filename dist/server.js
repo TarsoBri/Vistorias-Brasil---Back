@@ -50,7 +50,7 @@ const autheticateToken = (req, res, next) => {
 };
 const app = (0, express_1.default)();
 const corsOptions = {
-    origin: ["https://vistorias-brasil.vercel.app", "http://localhost:5174"],
+    origin: "https://vistorias-brasil.vercel.app",
     optionsSuccessStatus: 200,
     preflightContinue: false,
     allowedHeaders: ["Content-Type", "Token-Auth", "Login-Auth"],
