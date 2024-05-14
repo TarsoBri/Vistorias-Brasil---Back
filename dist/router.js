@@ -169,10 +169,17 @@ routes.patch("/clients/:id", (req, res) => __awaiter(void 0, void 0, void 0, fun
         if (authToken && typeof authToken === "string") {
             const decodedAuthToken = jsonwebtoken_1.default.verify(authToken, process.env.TOKEN_PASSWORD);
             if (decodedAuthToken.userId === id) {
-                const client = yield Client_1.Client.findByIdAndUpdate({ _id: id }, req.body, {
-                    new: true,
-                });
-                return res.status(200).json(client);
+                if (req.body.password != undefined ||
+                    req.body.status != undefined ||
+                    req.body.surveyor != undefined) {
+                    throw new Error("Alteração de dados não autorizada");
+                }
+                else {
+                    const client = yield Client_1.Client.findByIdAndUpdate({ _id: id }, req.body, {
+                        new: true,
+                    });
+                    return res.status(200).json(client);
+                }
             }
             else {
                 throw new Error("Token não autoriado.");

@@ -215,10 +215,18 @@ routes.patch("/clients/:id", async (req, res) => {
         process.env.TOKEN_PASSWORD as Secret
       ) as DecodedTokenLogin;
       if (decodedAuthToken.userId === id) {
-        const client = await Client.findByIdAndUpdate({ _id: id }, req.body, {
-          new: true,
-        });
-        return res.status(200).json(client);
+        if (
+          req.body.password != undefined ||
+          req.body.status != undefined ||
+          req.body.surveyor != undefined
+        ) {
+          throw new Error("Alteração de dados não autorizada");
+        } else {
+          const client = await Client.findByIdAndUpdate({ _id: id }, req.body, {
+            new: true,
+          });
+          return res.status(200).json(client);
+        }
       } else {
         throw new Error("Token não autoriado.");
       }

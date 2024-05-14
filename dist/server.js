@@ -49,6 +49,7 @@ const autheticateToken = (req, res, next) => {
     }
 };
 const app = (0, express_1.default)();
+// Cors
 const corsOptions = {
     origin: "https://vistorias-brasil.vercel.app",
     optionsSuccessStatus: 200,
@@ -61,7 +62,6 @@ app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 // Connect DataBase
 (0, connect_1.connectDataBase)();
-// Cors
 // Routers
 app.get("/auth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

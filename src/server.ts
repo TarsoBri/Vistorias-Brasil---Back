@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import jwt, { JwtPayload, Secret } from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
 import { connectDataBase } from "./database/connect";
 import bcrypt from "bcrypt";
 import { routes } from "./router";
@@ -49,6 +49,7 @@ const autheticateToken = (req: Request, res: Response, next: NextFunction) => {
 
 const app = express();
 
+// Cors
 const corsOptions = {
   origin: "https://vistorias-brasil.vercel.app",
   optionsSuccessStatus: 200,
@@ -64,8 +65,6 @@ app.use(express.json());
 
 // Connect DataBase
 connectDataBase();
-
-// Cors
 
 // Routers
 app.get("/auth", async (req, res) => {
